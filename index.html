@@ -1,0 +1,358 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript">
+    function viewport() {
+        var phoneWidth = parseInt(window.screen.width);
+        var phoneScale = phoneWidth / 640;
+        var ua = navigator.userAgent;
+        if (/Android (\d+\.\d+)/.test(ua)) {
+            var version = parseFloat(RegExp.$1);
+            if (ua.toLowerCase().indexOf("qq") > -1) {
+                document.write('<meta name="viewport" content="width=640, minimum-scale = ' + phoneScale + ', maximum-scale = ' + phoneScale + ', target-densitydpi=320">');
+                return;
+            }
+            if (version > 2.3) {
+                document.write('<meta name="viewport" content="width=640, minimum-scale = ' + phoneScale + ', maximum-scale = ' + phoneScale + ', target-densitydpi=device-dpi">');
+            } else {
+                document.write('<meta name="viewport" content="width=640, target-densitydpi=device-dpi">');
+            }
+        } else {
+            document.write('<meta name="viewport" content="width=640, user-scalable=no, target-densitydpi=device-dpi">');
+        }
+    }
+    viewport();
+    </script>
+    <title>无合成类的图片上传(请不要看使用方法了，使用方法没有更新好久了.chrome下边需要localhost的链接或者线上链接或者本地服务器的链接才可以使用--因为canvas跨域问题)</title>
+    <style type="text/css">
+    html,
+    body,
+    div,
+    input,
+    canvas {
+        margin: 0;
+        padding: 0;
+    }
+    
+    html,
+    body {
+        line-height: 1.6em;
+        font-size: 16px;
+        width: 640px;
+        margin: 0 auto;
+        overflow-x: hidden;
+    }
+    
+    .btn_group_02 {
+        border: none;
+        background: url(images/btn_group.png) no-repeat;
+    }
+    
+    .alert_title {
+        font-size: 0;
+        color: #4c4c4c;
+        height: 0px;
+        position: relative;
+    }
+    
+    .close {
+        position: absolute;
+        right: 0;
+        top: 0;
+        cursor: pointer;
+    }
+    
+    .pop {
+        z-index: 10002;
+        zoom: 1;
+    }
+    
+    .alert_box {
+        border: #ffba0a 1px solid;
+        background: url(images/alert_bg.png) repeat;
+        z-index: 10002;
+    }
+    
+    .upload {
+        width: 640px;
+    }
+    
+    .pic_photo {
+        padding-top: 70px;
+    }
+    
+    .pic_ctrl {
+        width: 640px;
+        height: 468px;
+        overflow: hidden;
+        border: #ffbd1e 1px solid;
+        margin: 0 auto;
+        position: relative;
+        background: transparent url(images/xk.png) no-repeat top center;
+    }
+    
+    .pic_ctrl img,
+    .pic_ctrl canvas {
+        position: absolute;
+    }
+    
+    .pic_tool {
+        width: 360px;
+        margin: 0 auto;
+    }
+    
+    .up_photo {
+        padding: 20px 0;
+    }
+    
+    .up_photo input {
+        vertical-align: middle;
+    }
+    
+    .files {
+        display: inline-block;
+        width: 174px;
+        height: 65px;
+        overflow: hidden;
+        background-position: right top;
+        margin-right: 11px;
+        vertical-align: middle;
+    }
+    
+    .files input {
+        font-size: 100px;
+        opacity: 0;
+        width: 348px;
+        margin-left: -174px;
+    }
+    
+    .next_step {
+        width: 174px;
+        height: 65px;
+        background-position: left bottom;
+    }
+    
+    .notes {
+        padding-left: 10px;
+    }
+    
+    .up_photo {
+        text-align: center;
+    }
+    
+    .comments {
+        color: #008200;
+    }
+    
+    .jscode {
+        color: Black
+    }
+    
+    .p1,
+    .p2 {
+        padding-left: 10px;
+    }
+    
+    .reds {
+        color: Red;
+    }
+    
+    .picmask {
+        width: 580px;
+        height: 406px;
+        overflow: hidden;
+        position: absolute;
+        left: 30px;
+        top: 32px;
+    }
+    
+    canvas {
+        position: absolute;
+    }
+    
+    .logo {
+        position: absolute;
+        z-index: 9999;
+        left: 0px;
+        top: 0px;
+    }
+    
+    .logo img {
+        position: static;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="pop">
+        <div class=" alert_box upload" id="upload" style="display:block;">
+            <div class="alert_matter">
+                <div class="up_main ">
+                    <div class="pic_photo">
+                        <div class="pic_ctrl">
+                            <div class="picmask">
+                                <!--通过img来预览图片-->
+                                <!--<img src="images/head.jpg" id="previewimg"/>-->
+                                <!--也可以通过canvas来预览图片-->
+                                <!-- <img id="previewimg" style="width:500px;height:400px;" src=""/>-->
+                                <canvas id="previewimg" width="580" height="406" style="left:0px;top:0px;">Your browser does not support the HTML5 canvas tag.</canvas>
+                                <div class="logo"><img src="images/sinalogo.png" alt="" /></div>
+                            </div>
+                        </div>
+                        <div class="pic_tool">
+                            <div class="img_scale" style="color:#000;text-align:center;">*拖拽或缩放照片 效果更佳</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="up_photo">
+            <div class="files btn_group_02 wxwbbtn">
+                <input type="file" id="uploadfirst" accept="image/*" name="pic" />
+            </div>
+            <input class="next_step btn_group_02" type="button" value="" />
+            <input class="uploadbtn" type="button" value="上传" />
+        </div>
+    </div>
+    <div class="log">
+    </div>
+    <div class="result">
+        裁剪的图片
+        <br />
+        <img id="cutimage" src="" />
+        <br /> 合成后的图片(去白边充满)
+        <br />
+        <img id="mergeimage" src="" />
+    </div>
+    <div class="notes">
+        <h2>功能说明</h2>
+        <div class="p1">
+            <h4>一、包含如下功能</h4>
+            <div class="p2">
+                1.1 图片本地预览<span class="reds">(需要引用3个js:preview.js,getoritention.js,imgissuefix.js依赖于jquery.js和common.js)</span>
+                <br />
+                <span class="reds">实现原理:</span>
+                <br /> 通过原生的file控件的change事件来获取用户选择的图片
+                <br /> Android系统手机通过blob数据获取图片
+                <br /> IPhone则通过FileReader获取图片数据
+                <br /> 进而获取到图片的颠倒信息后再进行修正操作.
+                <br /> 最后再放入临时canvas画布,供后续移动和缩放，合成操作用.
+                <br /> 1.2 图片移动和缩放<span class="reds">(需要引用1个js:smove.js依赖于jquery.js和common.js)</span>
+                <br />
+                <span class="reds">实现原理:</span> 用js原生的touch,move事件移动和缩放图片(针对低端手机做了移动和缩放的流畅处理)
+                <br /> 1.3 图片裁剪与合成(<b>如果项目不需要合成步骤，可以直接用裁剪返回的图片数据</b>)<span class="reds">(需要引用1个js:sina.cutCompose.js依赖于jquery.js和sina.common.js)</span>
+                <br />
+                <span class="reds">实现原理:</span>
+                <br /> 传入图片和相关坐标和属性来进行裁剪
+                <br /> 传入模板和裁剪后的图片数据进行合成
+                <br />
+            </div>
+            <h4>二、调用方法</h4>
+            <div class="p2">
+                2.1 本地图片预览调用方法
+                <br />
+                <span class="comments">// 响应file的回调:文件显示在页面后要执行的方法</span>
+                <br />
+                <span class="jscode">
+                 <span class="comments">
+                    // canvas预览的情况下,预览后的cv保存在这个变量中供缩放,移动和旋转</span>
+                <br /> // 响应file的回调</span>
+                <br /> var previewCallback = function(previewId,cv){
+                <br /> var nodeType = $("#"+previewId)[0].tagName.toLowerCase();
+                <br /> if(previewId){
+                <br />
+                <span class="comments">// 如果是用canvas来预览</span>
+                <br />
+                <span class="comments">// 将loading层隐藏</span>
+                <br /> $(".previewloading").hide();
+                <br />
+                <span class="comments">// 先解绑</span>
+                <br /> $("#previewimg").sMoveDispose({"moveAble":"upload"});
+                <br />
+                <span class="comments">// 移动图片加手势缩放操作,传入temCV以增加用户体验,操作起来更流畅<br />
+                                    <br />
+                                    // 图片的移动,缩放和旋转
+                                    // canvas中预览和img预览的区别在于是否有cv的返回
+                                    </span>
+                <br /> cv ? $("#previewimg").sMove({"moveAble":"upload","temCV":cv}) : $("#previewimg").sMove({"moveAble":"upload"});
+                <br /> }else{
+                <br />
+                <span class="comments">// 预览失败
+                            $(".previewloading").hide();<br />
+                        }<br />
+                    };<br />
+                </span>
+                <br />
+                <p class="jscode">
+                    <span class="comments">// 图片本地预览</span>
+                    <br /> $("#uploadfirst").preview({
+                    <br /> previewId: "previewimg",<span class="comments">// 用户操控画布的id</span>
+                    <br /> callBack:previewCallback,
+                    <span class="comments">// 预览后的回调方法</span>
+                    <br /> });
+                </p>
+            </div>
+            <div class="p2">
+                2.2 图片移动和缩放
+                <br />
+                <span class="comments">// 移动图片加手势缩放操作</span>
+                <br />
+                <span class="jscode">
+                $("#canvas_mergefirst").sMove({
+                    "moveAble":"upload",<span class="comments">// 如果存在这个id表示:用户可以在图片外的父级元素进行移动操作</span>
+                <br /> "temCV":cv <span class="comments">// 只有canvas预览的时候才传,cv是预览的base64返回</span> });
+                </span>
+                <br />
+            </div>
+            <div class="p2">
+                2.图片裁剪与合成
+                <br />
+                <span class="comments">// 图片裁剪与合成调用</span>
+                <br />
+                <p class="jscode">
+                    <span class="comments">// 图片裁剪</span>
+                    <br /> $.cutCompose.cut({
+                    <br /> "source":"previewimg",
+                    <span class="comments">// 图片绝对路径(含http)或者图片id</span>
+                    <br /> "left":$("#previewimg").position().left,
+                    <span class="comments">// 图片的x偏移</span>
+                    <br /> "top":$("#previewimg").position().top,
+                    <span class="comments">// 图片的y偏移</span>
+                    <br /> "width":200,
+                    <span class="comments">// 镂空/或者图片可以移动的区域的宽度</span>
+                    <br /> "height":300,
+                    <span class="comments">// 镂空/或者图片可以移动的区域的高度</span>
+                    <br /> "callBack":function(base64){
+                    <br /> $.s_com.getId("cutimage").src=base64;
+                    <br />
+                    <span class="comments">// 合成</span>
+                    <br /> $.cutCompose.merge({ "base64":base64,
+                    <span class="comments">// 传入裁剪后的图片数据</span>
+                    <br /> "modesource":"images/xk.png",
+                    <span class="comments">// 图片绝对路径</span>
+                    <br /> "offSetLeft":30,
+                    <span class="comments">// 从模板图片的哪一点X值开始贴图合成</span>
+                    <br /> "offSetTop":32,
+                    <span class="comments">// 从模板图片的哪一点Y值开始贴图合成</span>
+                    <br /> "width":$("#previewimg").parent().width(),
+                    <span class="comments">// 模板镂空的宽度</span>
+                    <br /> "height":$("#previewimg").parent().height(),
+                    <span class="comments">// 模板镂空的高度</span>
+                    <br /> "callBack":function(base64str){
+                    <br />
+                    <span class="comments">// 返回合成之后的img数据</span>
+                    <br /> $.s_com.getId("mergeimage").src=base64str;
+                    <br /> } }); }
+                </p>
+                <br />
+            </div>
+        </div>
+    </div>
+    <canvas id="aa"></canvas>
+    <!--整个页面只要这一个js文件,请在main.js中配置其他js以及相关依赖-->
+    <script id="scriptrequire" defer async src="http://all.vic.sina.com.cn/hdcommon/js/sina.require.min.js" data-src="js/main.js?v=1" type="text/javascript"></script>
+</body>
+
+</html>
